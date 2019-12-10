@@ -1,0 +1,43 @@
+# Demo Version incrementation pipeline
+# This demo will increment the minor version after 3 patch versions and the major version after 2 minor versions
+#
+# Pre-requisite
+# Create PAT with access to:
+#    Build - Read & execute
+# create a pipeline variable ( in this case called 'foo') with a value of 0.0.0
+# create a secret pipline variable called 'PAT' and put the PAT as the value
+#
+# The plugin can be sourced from: https://marketplace.visualstudio.com/items?itemName=maikvandergaag.maikvandergaag-versioncounter
+#blog: https://msftplayground.com/2018/11/version-number-counter-for-azure-devops/
+# Note: the plugin "Version number counter" only runs on Windows hosts
+
+pool:
+  vmImage: 'windows-latest'
+stages:
+  - stage: stage1
+    jobs:
+      - job: setVar
+        steps:
+          - task: versioncounter@1
+            inputs:
+              VersionVariable: 'foo'
+              UpdateMinorVersion: true
+              MaxValuePatchVersion: '3'
+              UpdateMajorVersion: true
+              MaxValueMinorVersion: '2'
+              DevOpsPat: $(PAT)
+            displayName: 'set the var'
+      - job: echoVar
+        displayName: 'echo the var'
+        dependsOn: setVar
+        steps:
+          - script: echo AFTER versioncounter $(foo)
+
+  - stage: stage2
+    dependsOn: stage1
+    jobs:
+    
+    - job: echoVar2
+      displayName: 'echo the var stage2'
+      steps:
+      - script: echo AFTER versioncounter $(foo)
